@@ -1,0 +1,11 @@
+{
+  "dependencies": {},
+  "devDependencies": {
+    "@types/bun": "^1.4.2"
+  },
+  "name": "typescript",
+  "private": true,
+  "peerDependencies": {
+    "typescript": "^7"
+  }
+}

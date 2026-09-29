@@ -1,0 +1,198 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title></title>
+    <style>
+      html,
+      body {
+        width: 100vw;
+        height: 100vh;
+        margin: 0;
+        padding: 0;
+      }
+
+      .center-ctn {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: end;
+        min-height: 100vh;
+      }
+
+      .middle-ctn {
+        justify-content: center;
+      }
+
+      #chatbox {
+        display: flex;
+        flex-direction: row;
+        gap: 10px;
+        margin-bottom: 30px;
+        width: 60%;
+        height: 8%;
+      }
+
+      input {
+        height: 100%;
+        width: 100%;
+        border-radius: 30px;
+        padding-left: 20px;
+      }
+
+      #button {
+        padding-left: 20px;
+        padding-right: 20px;
+        border-radius: 50%;
+        border: 1px solid black;
+        color: white;
+        background-color: #007aff;
+        text-align: center;
+        align-content: center;
+        font-size: 30px;
+      }
+
+      .messages_box {
+        margin-top: 60px;
+        margin-bottom: 30px;
+        height: 100%;
+        width: 60%;
+        display: flex;
+        justify-content: start;
+        align-items: center;
+        gap: 10px;
+        flex-direction: column;
+        overflow-y: auto;
+      }
+
+      .chat {
+        max-width: 50%;
+        padding: 10px;
+        border-radius: 20px;
+      }
+
+      .ai {
+        background-color: #e5e5ea;
+        align-self: flex-start;
+      }
+
+      .user {
+        color: white;
+        background-color: #007aff;
+        align-self: flex-end;
+      }
+    </style>
+  </head>
+  <body class="center-ctn middle-ctn">
+    <!-- <body class="center-ctn middle-ctn"> -->
+    <h1>Ready when you are.</h1>
+    <div id="messages_box"></div>
+    <div id="chatbox">
+      <input type="text" name="chat" placeholder="Ask anything" />
+      <div id="button">↑</div>
+    </div>
+  </body>
+  <script>
+    let isStarted = false;
+    const input = document.querySelector("input");
+    const messages = [];
+
+    const push_message = (message) => {
+      messages.push(message);
+      message_box = document.createElement("div");
+      if (message.role == "assistant") {
+        message_box.className = "chat ai";
+      } else if (message.role == "user") {
+        message_box.className = "chat user";
+      }
+      message_box.textContent = message.content;
+      messages_box.appendChild(message_box);
+      message_box.scrollIntoView({
+        behavior: "smooth", // Animates the scroll instead of jumping instantly
+        block: "end", // Aligns the bottom of the element with the bottom of the view
+      });
+    };
+
+    const pop_message = () => {
+      messages.pop();
+      messages_box.removeChild(messages_box.lastChild);
+    };
+
+    const callLLM = async (message) => {
+      push_message({ role: "user", content: message });
+
+      const past5messages = messages.slice(-5);
+
+      let url = "http://localhost:11434/api/chat";
+      let data = {
+        model: "gemma4:e2b",
+        messages: past5messages,
+        stream: false,
+        think: false,
+      };
+
+      let result;
+
+      try {
+        response = await fetch(url, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(data),
+        });
+
+        result = await response.json();
+      } catch (e) {
+        // delete the error message as well
+        pop_message();
+        return {
+          message: "Can't connect to the ollama",
+          err: 1,
+        };
+      }
+
+      /*
+      "message": {
+        "role": "assistant",
+        "content": "Hello! How can I help you today? 😊"
+      },
+      */
+
+      push_message(result.message);
+      return { message: result.message.content, err: 0 };
+    };
+
+    const handleSend = async () => {
+      // the first message will push the text box to the bottom
+      if (!isStarted) {
+        document.querySelector("h1").remove();
+        isStarted = true;
+        const body = document.querySelector("body");
+        body.classList.remove("middle-ctn");
+        messages_box.className = "messages_box";
+      }
+
+      // get message then empty input
+      let message = input.value;
+      input.value = "";
+
+      let result = await callLLM(message);
+      response = result.message;
+      err = result.err;
+
+      if (err) {
+        input.value = message;
+      }
+    };
+
+    input.addEventListener("keydown", async (event) => {
+      if (event.key == "Enter") {
+        await handleSend();
+      }
+    });
+
+    button.addEventListener("click", async () => {
+      await handleSend();
+    });
+  </script>
+</html>
