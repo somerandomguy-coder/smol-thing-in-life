@@ -1,15 +1,9 @@
-# typescript
+# simple chat to call ollama
 
-To install dependencies:
-
-```bash
-bun install
-```
-
-To run:
+Ensure that the system downloaded ollama and have gemma4:e2b
 
 ```bash
-bun run 
+sudo systemctl set-environment OLLAMA_ORIGINS="*"
+sudo systemctl restart ollama
 ```
 
-This project was created using `bun init` in bun v1.4.0. [Bun](https://bun.com) is a fast all-in-one JavaScript runtime.
