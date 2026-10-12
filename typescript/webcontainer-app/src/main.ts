@@ -25,9 +25,6 @@ await webcontainerInstance.mount(files)
 const file = await webcontainerInstance.fs.readFile('/index.html', 'utf-8');
 console.log(file);
 
-
-
-
 document.querySelector<HTMLDivElement>('#app')!.innerHTML = `
 <section id="center">
     hello
